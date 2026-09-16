@@ -5,3 +5,4 @@ __pycache__/
 results/*.npy
 results/experiment_*.json
 !results/.gitkeep
+results/run.log
