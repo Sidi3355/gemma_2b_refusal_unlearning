@@ -40,8 +40,18 @@ def main():
     mid = cfg.probe_model_id
     dev = cfg.device
 
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--prompts", choices=["harmful", "harmless"], default="harmful",
+                    help="which prompt set to evaluate refusal on")
+    ap_args = ap.parse_args()
+
     harmful = load_prompts(cfg.unsafe_csv)
     harmless = load_prompts(cfg.harmless_csv)
+    eval_prompts = harmful if ap_args.prompts == "harmful" else harmless
+    eval_name = ap_args.prompts
+    print(f"evaluating refusal on the {eval_name} prompt set "
+          f"({len(eval_prompts)} prompts)", flush=True)
     direction = np.load(sorted(glob.glob(str(RESULTS_DIR / "refusal_direction_*.npy")))[-1])
     rng = np.random.default_rng(cfg.random_seed)
     rand = rng.standard_normal(direction.shape).astype(np.float32)
@@ -74,7 +84,7 @@ def main():
             handles = add_ablation_hooks(model, vec, mode=mode,
                                          mu=(mu if mode == "mean" else None), device=dev)
         try:
-            resp = generate_responses(model, tok, harmful, True,
+            resp = generate_responses(model, tok, eval_prompts, True,
                                       MAX_NEW_TOKENS, False, dev)
         finally:
             remove_hooks(handles)
@@ -85,18 +95,19 @@ def main():
               f"({stats['refusals']}/{stats['n']})", flush=True)
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out = RESULTS_DIR / f"all_conditions_{stamp}.json"
+    out = RESULTS_DIR / f"all_conditions_{eval_name}_{stamp}.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump({"model": mid, "dtype": cfg.dtype, "max_new_tokens": MAX_NEW_TOKENS,
+                   "prompt_set": eval_name,
                    "layer_mean_projections": mu.tolist(),
                    "conditions": results,
                    "responses": {k: [{"prompt": p, "response": r,
                                       "refused": bool(is_refusal(r))}
-                                     for p, r in zip(harmful, v)]
+                                     for p, r in zip(eval_prompts, v)]
                                  for k, v in responses.items()}},
                   f, indent=2, ensure_ascii=False)
 
-    print("\n==== ALL CONDITIONS (harmful-prompt refusal rate) ====")
+    print(f"\n==== ALL CONDITIONS ({eval_name}-prompt refusal rate) ====")
     for k, v in results.items():
         print(f"  {k:16s} {v['refusal_rate']:6.1%}  ({v['refusals']}/{v['n']})")
     print(f"  results -> {out}")
