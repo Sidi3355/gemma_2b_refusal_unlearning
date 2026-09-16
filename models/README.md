@@ -46,3 +46,23 @@ Output lands in `results/gguf/*.Q4_K_M.gguf` (~1.6 GB each).
 ## Checksums
 
 SHA-256 of the built `Q4_K_M` files is recorded in `checksums.txt` when built.
+
+## Weight-baked mean ablation (single-file, for Jan/Ollama)
+
+A sixth variant approximates mean ablation with weights alone, so it runs as a
+plain GGUF with no control vector: zero-ablate every residual-writing matrix,
+then inject a constant along the refusal direction through the token embeddings
+(scaled by the model normalizer). It is approximate — one constant instead of
+the true per-layer, sign-changing means — so it is measured, not assumed.
+
+Measured (gemma-2b-it): harmful refusal 3.8% (vs 6.9% true mean ablation),
+harmless 1.6% (the only variant with any harmless over-refusal, from the blunt
+constant overshoot).
+
+Build it locally:
+```bash
+python export_baked_model.py --out results/gemma-2b-it-mean-ablation-baked
+python <llama.cpp>/convert_hf_to_gguf.py results/gemma-2b-it-mean-ablation-baked \
+    --outtype q8_0 --outfile results/gguf/gemma-2b-it-mean-ablation-baked.q8_0.gguf
+```
+Then load `gemma-2b-it-mean-ablation-baked.*.gguf` directly in Jan/Ollama/llama.cpp.
