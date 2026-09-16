@@ -6,3 +6,4 @@ results/*.npy
 results/experiment_*.json
 !results/.gitkeep
 results/run.log
+results/chain.log
