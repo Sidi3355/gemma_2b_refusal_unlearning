@@ -1,0 +1,6 @@
+== Refusal-direction ablation on unsloth/gemma-2b-it ==
+  130 harmful / 126 harmless prompts
+  loading unsloth/gemma-2b-it (dtype=float32) ...
+`torch_dtype` is deprecated! Use `dtype` instead!
+  collecting activations (harmful)...
+    activations: 20/130

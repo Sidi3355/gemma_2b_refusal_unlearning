@@ -30,13 +30,16 @@ class ExperimentConfig:
     #   * Gemma 2 (2B):  "google/gemma-2-2b" / "google/gemma-2-2b-it"
     # Defaults target the original Gemma-2B ("Gemma 2B") pair. Override on the
     # command line to use the Gemma-2 2B pair instead.
-    base_model_id: str = "google/gemma-2b"
-    instruct_model_id: str = "google/gemma-2b-it"
+    # Defaults use Unsloth's ungated mirrors of the official Gemma-2B weights
+    # (identical weights, but not license-gated, so no HF token is needed).
+    # For the official gated repos use google/gemma-2b(-it) with an HF_TOKEN.
+    base_model_id: str = "unsloth/gemma-2b"
+    instruct_model_id: str = "unsloth/gemma-2b-it"
 
     # The refusal direction is derived from the *instruction-tuned* model,
     # because that is the model that actually refuses. It can then be applied
     # to either model.
-    probe_model_id: str = "google/gemma-2b-it"
+    probe_model_id: str = "unsloth/gemma-2b-it"
 
     # --- Data -------------------------------------------------------------
     unsafe_csv: Path = DATA_DIR / "unsafe_prompts.csv"
