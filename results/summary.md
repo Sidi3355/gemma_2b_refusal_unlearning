@@ -9,6 +9,7 @@ Refusal rate = fraction of prompts the model refused (higher = more refusals).
 | Baseline (no edit) | 66.2% (86/130) | 0.0% (0/126) |
 | Zero ablation (component -> 0) | 30.0% (39/130) | 0.0% (0/126) |
 | Mean ablation (component -> harmless mean) | 6.9% (9/130) | 0.0% (0/126) |
+| Mean ablation, weight-baked single-file approximation | 3.8% (5/130) | 1.6% (2/126) |
 | Reversed (component negated) | 23.8% (31/130) | 0.0% (0/126) |
 | Random-direction control | 64.6% (84/130) | 0.0% (0/126) |
 

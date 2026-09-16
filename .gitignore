@@ -8,6 +8,8 @@ results/*
 !results/summary.md
 !results/responses.csv
 !results/all_conditions_*.json
+!results/baked_mean_*.json
+!results/refusal_direction_*.npy
 # the tiny control-vector file is committable; large *.gguf model files are not
 !results/gguf/
 results/gguf/*
