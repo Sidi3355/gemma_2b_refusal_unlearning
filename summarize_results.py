@@ -18,11 +18,12 @@ import os
 
 from src.config import RESULTS_DIR
 
-ORDER = ["baseline", "zero_ablation", "mean_ablation", "reversed", "random_control"]
+ORDER = ["baseline", "zero_ablation", "mean_ablation", "mean_ablation_baked", "reversed", "random_control"]
 LABEL = {
     "baseline": "Baseline (no edit)",
     "zero_ablation": "Zero ablation (component -> 0)",
     "mean_ablation": "Mean ablation (component -> harmless mean)",
+    "mean_ablation_baked": "Mean ablation, weight-baked single-file approximation",
     "reversed": "Reversed (component negated)",
     "random_control": "Random-direction control",
 }
@@ -42,6 +43,14 @@ def _rate(d, cond):
 def main():
     harmful = _latest("all_conditions_harmful_*.json")
     harmless = _latest("all_conditions_harmless_*.json")
+    # merge in the weight-baked mean-ablation approximation, if present
+    for setname, data in [("harmful", harmful), ("harmless", harmless)]:
+        if not data:
+            continue
+        baked = _latest(f"baked_mean_{setname}_*.json")
+        if baked:
+            data["conditions"].update(baked["conditions"])
+            data["responses"].update(baked["responses"])
     if not harmful and not harmless:
         raise SystemExit("No all_conditions_*.json found. Run run_all_conditions.py first.")
 
