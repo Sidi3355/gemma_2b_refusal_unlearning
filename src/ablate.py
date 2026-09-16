@@ -25,16 +25,24 @@ import torch
 
 
 def _project_out_output(weight: torch.Tensor, r: torch.Tensor, strength: float) -> None:
-    """W <- W - strength * (r r^T) W. ``weight`` is [out=hidden, in]."""
-    # r: [hidden]. Component of each column of W along r, scaled and removed.
-    proj = torch.outer(r, r) @ weight            # [hidden, in]
-    weight.sub_(strength * proj)
+    """W <- W - strength * (r r^T) W. ``weight`` is [out=hidden, in].
+
+    Done as an in-place rank-1 update to avoid materialising the [hidden, hidden]
+    ``r r^T`` matrix or a full-size product (memory-critical for the large
+    matrices; a naive version can spike several GB and OOM).
+    """
+    rW = r @ weight                                # [in]  = r^T W
+    weight.addr_(r, rW, alpha=-strength)           # W -= strength * outer(r, rW)
 
 
 def _project_out_rows(weight: torch.Tensor, r: torch.Tensor, strength: float) -> None:
-    """E <- E - strength * (E r) r^T. ``weight`` is [vocab, hidden]."""
+    """E <- E - strength * (E r) r^T. ``weight`` is [vocab, hidden].
+
+    In-place rank-1 update; avoids allocating a [vocab, hidden] temporary
+    (~2 GB for Gemma's 256k-row embedding in fp32).
+    """
     coeffs = weight @ r                            # [vocab]
-    weight.sub_(strength * torch.outer(coeffs, r))
+    weight.addr_(coeffs, r, alpha=-strength)       # E -= strength * outer(coeffs, r)
 
 
 @torch.no_grad()
