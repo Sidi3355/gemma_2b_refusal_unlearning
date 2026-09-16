@@ -2,11 +2,13 @@ __pycache__/
 *.pyc
 .venv/
 
-# Ignore everything generated under results/ ...
+# Ignore generated results, keep the small shareable artefacts:
 results/*
-# ... except the small, shareable result artefacts (keep big/binary out of git):
 !results/.gitkeep
 !results/summary.md
 !results/responses.csv
 !results/all_conditions_*.json
-# (model checkpoints, *.gguf, *.npy, *.log, and export dirs stay ignored)
+# the tiny control-vector file is committable; large *.gguf model files are not
+!results/gguf/
+results/gguf/*
+!results/gguf/*.controlvector.gguf
