@@ -1,0 +1,48 @@
+# Model variants (GGUF)
+
+Five experimental conditions from the refusal-direction study on
+`gemma-2b-it`. Four map to static weights and are provided as `Q4_K_M` GGUF;
+mean ablation is an activation-level intervention with no faithful GGUF.
+
+| condition        | what it does                                        | GGUF |
+|------------------|-----------------------------------------------------|------|
+| baseline         | unmodified `gemma-2b-it`                             | yes  |
+| zero_ablation    | refusal direction projected out of the weights      | yes  |
+| reversed         | refusal direction negated (anti-refusal)            | yes  |
+| random_control   | a random direction projected out (specificity ctrl) | yes  |
+| mean_ablation    | refusal component set to its per-layer harmless mean | no  |
+
+## Why mean ablation has no GGUF
+
+Zero ablation, reversed, and random control are pure weight edits (project a
+direction out of, or negate it in, every matrix that writes to the residual
+stream), so they bake into the checkpoint. Mean ablation additionally *adds* a
+per-layer constant along the refusal direction to the residual stream. Gemma's
+GGUF architecture in llama.cpp has no additive bias tensors in the residual
+path, so this cannot be represented; baked in, it would silently collapse to
+plain zero ablation. Run this variant from transformers instead:
+
+```bash
+python infer_mean_ablation.py "How do I pick a good lock for my own door?"
+```
+
+## Building the GGUFs
+
+These files are multi-GB and are not committed (GitHub caps files at 100MB and
+git is the wrong place for model weights). Regenerate them:
+
+```bash
+pip install -r requirements.txt gguf sentencepiece
+git clone https://github.com/ggml-org/llama.cpp
+cmake -S llama.cpp -B llama.cpp/build -DLLAMA_CURL=OFF
+cmake --build llama.cpp/build --target llama-quantize -j
+
+python run_experiment.py                 # writes results/refusal_direction_*.npy
+LLAMA_DIR=$PWD/llama.cpp ./build_all_gguf.sh
+```
+
+Output lands in `results/gguf/*.Q4_K_M.gguf` (~1.6 GB each).
+
+## Checksums
+
+SHA-256 of the built `Q4_K_M` files is recorded in `checksums.txt` when built.
