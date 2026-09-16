@@ -57,6 +57,8 @@ def main():
     ap.add_argument("--strength", type=float, default=None, help="ablation strength")
     ap.add_argument("--max-new-tokens", type=int, default=None)
     ap.add_argument("--sample", action="store_true", help="sample instead of greedy")
+    ap.add_argument("--direction-only", action="store_true",
+                    help="find and save the refusal direction, then exit (skip generation)")
     args = ap.parse_args()
 
     cfg = ExperimentConfig()
@@ -92,6 +94,9 @@ def main():
     print(f"  chosen layer {probe.layer}: train={probe.train_acc:.3f} "
           f"test={probe.test_acc:.3f}")
     np.save(RESULTS_DIR / f"refusal_direction_{stamp}.npy", probe.direction)
+    if args.direction_only:
+        print("  --direction-only: saved refusal direction, exiting before generation.")
+        return
 
     # 4. Baseline generations on the harmful prompts.
     print("  baseline generation...", flush=True)
