@@ -12,6 +12,14 @@ OUT="results/gguf"; mkdir -p "$OUT"
 MODEL="${MODEL:-unsloth/gemma-2b-it}"
 DIR_NPY="$(ls -t results/refusal_direction_*.npy | head -1)"
 RAND_NPY="results/random_direction_seed0.npy"
+if [[ ! -f "$RAND_NPY" ]]; then
+  python3 - "$DIR_NPY" "$RAND_NPY" <<'PYGEN'
+import sys, numpy as np
+d=np.load(sys.argv[1]); rng=np.random.default_rng(0)
+r=rng.standard_normal(d.shape).astype(np.float32); r/=np.linalg.norm(r)
+np.save(sys.argv[2], r)
+PYGEN
+fi
 
 conv () {  # <hf_dir> <tag>
   python3 "$LLAMA_DIR/convert_hf_to_gguf.py" "$1" --outtype f16 --outfile "$OUT/$2.f16.gguf"
