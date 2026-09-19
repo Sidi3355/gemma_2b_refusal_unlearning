@@ -14,3 +14,6 @@ results/*
 !results/gguf/
 results/gguf/*
 !results/gguf/*.controlvector.gguf
+
+# downloaded benchmark data (fetch with evals/fetch_benchmarks.sh)
+data/benchmarks/
